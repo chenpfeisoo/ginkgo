@@ -53,3 +53,14 @@ func NewAfterSuiteNode(body interface{}, codeLocation types.CodeLocation, timeou
 		runner: newRunner(body, codeLocation, timeout, failer, types.SpecComponentTypeAfterSuite, 0),
 	}
 }
+func NewBeforeFarmWorkNode(body interface{}, codeLocation types.CodeLocation, timeout time.Duration, failer *failer.Failer) SuiteNode {
+	return &simpleSuiteNode{
+		runner: newRunner(body, codeLocation, timeout, failer, types.SpecComponentTypeBeforeFarmWork, 0),
+	}
+}
+
+func NewAfterFarmWorkNode(body interface{}, codeLocation types.CodeLocation, timeout time.Duration, failer *failer.Failer) SuiteNode {
+	return &simpleSuiteNode{
+		runner: newRunner(body, codeLocation, timeout, failer, types.SpecComponentTypeAfterFarmWork, 0),
+	}
+}

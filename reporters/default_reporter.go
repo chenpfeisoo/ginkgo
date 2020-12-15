@@ -46,7 +46,17 @@ func (reporter *DefaultReporter) AfterSuiteDidRun(setupSummary *types.SetupSumma
 		reporter.stenographer.AnnounceAfterSuiteFailure(setupSummary, reporter.config.Succinct, reporter.config.FullTrace)
 	}
 }
+func (reporter *DefaultReporter) BeforeFarmWorkDidRun(setupSummary *types.SetupSummary) {
+	if setupSummary.State != types.SpecStatePassed {
+		reporter.stenographer.AnnounceBeforeFarmWorkFailure(setupSummary, reporter.config.Succinct, reporter.config.FullTrace)
+	}
+}
 
+func (reporter *DefaultReporter) AfterFarmWorkDidRun(setupSummary *types.SetupSummary) {
+	if setupSummary.State != types.SpecStatePassed {
+		reporter.stenographer.AnnounceAfterFarmWorkFailure(setupSummary, reporter.config.Succinct, reporter.config.FullTrace)
+	}
+}
 func (reporter *DefaultReporter) SpecWillRun(specSummary *types.SpecSummary) {
 	if reporter.config.Verbose && !reporter.config.Succinct && specSummary.State != types.SpecStatePending && specSummary.State != types.SpecStateSkipped {
 		reporter.stenographer.AnnounceSpecWillRun(specSummary)

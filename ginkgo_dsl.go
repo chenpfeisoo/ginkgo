@@ -625,3 +625,11 @@ func parseTimeout(timeout ...float64) time.Duration {
 		return time.Duration(timeout[0] * float64(time.Second))
 	}
 }
+func BeforeFarmWork(body interface{}, timeout ...float64) bool {
+	global.Suite.PushBeforeFarmWorkNode(body, codelocation.New(1), parseTimeout(timeout...))
+	return true
+}
+func AfterFarmWork(body interface{}, timeout ...float64) bool {
+	global.Suite.PushAfterFarmWorkNode(body, codelocation.New(1), parseTimeout(timeout...))
+	return true
+}

@@ -45,6 +45,9 @@ type Stenographer interface {
 	AnnounceBeforeSuiteFailure(summary *types.SetupSummary, succinct bool, fullTrace bool)
 	AnnounceAfterSuiteFailure(summary *types.SetupSummary, succinct bool, fullTrace bool)
 
+	AnnounceBeforeFarmWorkFailure(summary *types.SetupSummary, succinct bool, fullTrace bool)
+	AnnounceAfterFarmWorkFailure(summary *types.SetupSummary, succinct bool, fullTrace bool)
+
 	AnnounceCapturedOutput(output string)
 
 	AnnounceSuccessfulSpec(spec *types.SpecSummary)
@@ -204,7 +207,13 @@ func (s *consoleStenographer) AnnounceSpecWillRun(spec *types.SpecSummary) {
 	s.printNewLine()
 	s.midBlock()
 }
+func (s *consoleStenographer) AnnounceBeforeFarmWorkFailure(summary *types.SetupSummary, succinct bool, fullTrace bool) {
+	s.announceSetupFailure("BeforeFarmWork", summary, succinct, fullTrace)
+}
 
+func (s *consoleStenographer) AnnounceAfterFarmWorkFailure(summary *types.SetupSummary, succinct bool, fullTrace bool) {
+	s.announceSetupFailure("AfterFarmWork", summary, succinct, fullTrace)
+}
 func (s *consoleStenographer) AnnounceBeforeSuiteFailure(summary *types.SetupSummary, succinct bool, fullTrace bool) {
 	s.announceSetupFailure("BeforeSuite", summary, succinct, fullTrace)
 }

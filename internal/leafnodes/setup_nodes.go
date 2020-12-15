@@ -46,3 +46,14 @@ func NewJustAfterEachNode(body interface{}, codeLocation types.CodeLocation, tim
 		runner: newRunner(body, codeLocation, timeout, failer, types.SpecComponentTypeJustAfterEach, componentIndex),
 	}
 }
+func NewBeforeFarmWork(body interface{}, codeLocation types.CodeLocation, timeout time.Duration, failer *failer.Failer, componentIndex int) *SetupNode {
+	return &SetupNode{
+		runner: newRunner(body, codeLocation, timeout, failer, types.SpecComponentTypeBeforeFarmWork, componentIndex),
+	}
+}
+
+func NewAfterFarmWork(body interface{}, codeLocation types.CodeLocation, timeout time.Duration, failer *failer.Failer, componentIndex int) *SetupNode {
+	return &SetupNode{
+		runner: newRunner(body, codeLocation, timeout, failer, types.SpecComponentTypeAfterFarmWork, componentIndex),
+	}
+}

@@ -20,32 +20,36 @@ import (
 )
 
 type SpecRunner struct {
-	description     string
-	beforeSuiteNode leafnodes.SuiteNode
-	iterator        spec_iterator.SpecIterator
-	afterSuiteNode  leafnodes.SuiteNode
-	reporters       []reporters.Reporter
-	startTime       time.Time
-	suiteID         string
-	runningSpec     *spec.Spec
-	writer          Writer.WriterInterface
-	config          config.GinkgoConfigType
-	interrupted     bool
-	processedSpecs  []*spec.Spec
-	lock            *sync.Mutex
+	description        string
+	beforeSuiteNode    leafnodes.SuiteNode
+	iterator           spec_iterator.SpecIterator
+	afterSuiteNode     leafnodes.SuiteNode
+	reporters          []reporters.Reporter
+	startTime          time.Time
+	suiteID            string
+	runningSpec        *spec.Spec
+	writer             Writer.WriterInterface
+	config             config.GinkgoConfigType
+	interrupted        bool
+	processedSpecs     []*spec.Spec
+	lock               *sync.Mutex
+	beforeFarmWorkNode leafnodes.SuiteNode
+	afterFarmWorkNode  leafnodes.SuiteNode
 }
 
-func New(description string, beforeSuiteNode leafnodes.SuiteNode, iterator spec_iterator.SpecIterator, afterSuiteNode leafnodes.SuiteNode, reporters []reporters.Reporter, writer Writer.WriterInterface, config config.GinkgoConfigType) *SpecRunner {
+func New(description string, beforeSuiteNode leafnodes.SuiteNode, iterator spec_iterator.SpecIterator, afterSuiteNode leafnodes.SuiteNode, reporters []reporters.Reporter, writer Writer.WriterInterface, config config.GinkgoConfigType, beforeFarmWorkNode leafnodes.SuiteNode, afterFarmWorkNode leafnodes.SuiteNode) *SpecRunner {
 	return &SpecRunner{
-		description:     description,
-		beforeSuiteNode: beforeSuiteNode,
-		iterator:        iterator,
-		afterSuiteNode:  afterSuiteNode,
-		reporters:       reporters,
-		writer:          writer,
-		config:          config,
-		suiteID:         randomID(),
-		lock:            &sync.Mutex{},
+		description:        description,
+		beforeSuiteNode:    beforeSuiteNode,
+		iterator:           iterator,
+		afterSuiteNode:     afterSuiteNode,
+		reporters:          reporters,
+		beforeFarmWorkNode: beforeFarmWorkNode,
+		afterFarmWorkNode:  afterFarmWorkNode,
+		writer:             writer,
+		config:             config,
+		suiteID:            randomID(),
+		lock:               &sync.Mutex{},
 	}
 }
 
@@ -59,16 +63,17 @@ func (runner *SpecRunner) Run() bool {
 	signalRegistered := make(chan struct{})
 	go runner.registerForInterrupts(signalRegistered)
 	<-signalRegistered
-
-	suitePassed := runner.runBeforeSuite()
-
+	suitePassed := runner.runBeforeFarmWork()
 	if suitePassed {
-		suitePassed = runner.runSpecs()
+		suitePassed = runner.runBeforeSuite()
+		if suitePassed {
+			suitePassed = runner.runSpecs()
+		}
 	}
 
 	runner.blockForeverIfInterrupted()
 
-	suitePassed = runner.runAfterSuite() && suitePassed
+	suitePassed = runner.runAfterSuite() && runner.runAfterFarmWork() && suitePassed
 
 	runner.reportSuiteDidEnd(suitePassed)
 
@@ -112,7 +117,34 @@ func (runner *SpecRunner) performDryRun() {
 
 	runner.reportSuiteDidEnd(true)
 }
+func (runner *SpecRunner) runBeforeFarmWork() bool {
+	if runner.beforeFarmWorkNode == nil || runner.wasInterrupted() {
+		return true
+	}
 
+	runner.writer.Truncate()
+	conf := runner.config
+	passed := runner.beforeFarmWorkNode.Run(conf.ParallelNode, conf.ParallelTotal, conf.SyncHost)
+	if !passed {
+		runner.writer.DumpOut()
+	}
+	runner.reportBeforeFarmWork(runner.beforeFarmWorkNode.Summary())
+	return passed
+}
+func (runner *SpecRunner) runAfterFarmWork() bool {
+	if runner.afterFarmWorkNode == nil {
+		return true
+	}
+
+	runner.writer.Truncate()
+	conf := runner.config
+	passed := runner.afterFarmWorkNode.Run(conf.ParallelNode, conf.ParallelTotal, conf.SyncHost)
+	if !passed {
+		runner.writer.DumpOut()
+	}
+	runner.reportAfterFarmWork(runner.afterFarmWorkNode.Summary())
+	return passed
+}
 func (runner *SpecRunner) runBeforeSuite() bool {
 	if runner.beforeSuiteNode == nil || runner.wasInterrupted() {
 		return true
@@ -278,7 +310,17 @@ func (runner *SpecRunner) reportSuiteWillBegin() {
 		reporter.SpecSuiteWillBegin(runner.config, summary)
 	}
 }
+func (runner *SpecRunner) reportAfterFarmWork(summary *types.SetupSummary) {
+	for _, reporter := range runner.reporters {
+		reporter.AfterFarmWorkDidRun(summary)
+	}
+}
 
+func (runner *SpecRunner) reportBeforeFarmWork(summary *types.SetupSummary) {
+	for _, reporter := range runner.reporters {
+		reporter.BeforeFarmWorkDidRun(summary)
+	}
+}
 func (runner *SpecRunner) reportBeforeSuite(summary *types.SetupSummary) {
 	for _, reporter := range runner.reporters {
 		reporter.BeforeSuiteDidRun(summary)

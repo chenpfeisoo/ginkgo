@@ -153,8 +153,8 @@ type SpecComponentType uint
 
 const (
 	SpecComponentTypeInvalid SpecComponentType = iota
-
 	SpecComponentTypeContainer
+	SpecComponentTypeBeforeFarmWork
 	SpecComponentTypeBeforeSuite
 	SpecComponentTypeAfterSuite
 	SpecComponentTypeBeforeEach
@@ -163,6 +163,7 @@ const (
 	SpecComponentTypeAfterEach
 	SpecComponentTypeIt
 	SpecComponentTypeMeasure
+	SpecComponentTypeAfterFarmWork
 )
 
 type FlagType uint

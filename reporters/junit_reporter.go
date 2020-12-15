@@ -86,6 +86,13 @@ func (reporter *JUnitReporter) BeforeSuiteDidRun(setupSummary *types.SetupSummar
 func (reporter *JUnitReporter) AfterSuiteDidRun(setupSummary *types.SetupSummary) {
 	reporter.handleSetupSummary("AfterSuite", setupSummary)
 }
+func (reporter *JUnitReporter) BeforeFarmWorkDidRun(setupSummary *types.SetupSummary) {
+	reporter.handleSetupSummary("BeforeFarmWork", setupSummary)
+}
+
+func (reporter *JUnitReporter) AfterFarmWorkDidRun(setupSummary *types.SetupSummary) {
+	reporter.handleSetupSummary("AfterFarmWork", setupSummary)
+}
 
 func failureMessage(failure types.SpecFailure) string {
 	return fmt.Sprintf("%s\n%s\n%s", failure.ComponentCodeLocation.String(), failure.Message, failure.Location.String())
@@ -167,7 +174,7 @@ func (reporter *JUnitReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 	if err == nil {
 		fmt.Fprintf(os.Stdout, "\nJUnit report was created: %s\n", filePath)
 	} else {
-		fmt.Fprintf(os.Stderr,"\nFailed to generate JUnit report data:\n\t%s", err.Error())
+		fmt.Fprintf(os.Stderr, "\nFailed to generate JUnit report data:\n\t%s", err.Error())
 	}
 }
 

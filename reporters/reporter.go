@@ -12,4 +12,6 @@ type Reporter interface {
 	SpecDidComplete(specSummary *types.SpecSummary)
 	AfterSuiteDidRun(setupSummary *types.SetupSummary)
 	SpecSuiteDidEnd(summary *types.SuiteSummary)
+	BeforeFarmWorkDidRun(setupSummary *types.SetupSummary)
+	AfterFarmWorkDidRun(setupSummary *types.SetupSummary)
 }

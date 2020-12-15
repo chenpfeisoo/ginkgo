@@ -38,6 +38,8 @@ type Suite struct {
 	containerIndex      int
 	beforeSuiteNode     leafnodes.SuiteNode
 	afterSuiteNode      leafnodes.SuiteNode
+	beforeFarmWorkNode  leafnodes.SuiteNode
+	afterFarmWorkNode   leafnodes.SuiteNode
 	runner              *specrunner.SpecRunner
 	failer              *failer.Failer
 	running             bool
@@ -73,7 +75,7 @@ func (suite *Suite) Run(t ginkgoTestingT, description string, reporters []report
 	r := rand.New(rand.NewSource(config.RandomSeed))
 	suite.topLevelContainer.Shuffle(r)
 	iterator, hasProgrammaticFocus := suite.generateSpecsIterator(description, config)
-	suite.runner = specrunner.New(description, suite.beforeSuiteNode, iterator, suite.afterSuiteNode, reporters, writer, config)
+	suite.runner = specrunner.New(description, suite.beforeSuiteNode, iterator, suite.afterSuiteNode, reporters, writer, config, suite.beforeFarmWorkNode, suite.afterFarmWorkNode)
 
 	suite.running = true
 	success := suite.runner.Run()
@@ -224,4 +226,24 @@ func (suite *Suite) PushAfterEachNode(body interface{}, codeLocation types.CodeL
 		suite.failer.Fail("You may only call AfterEach from within a Describe, Context or When", codeLocation)
 	}
 	suite.currentContainer.PushSetupNode(leafnodes.NewAfterEachNode(body, codeLocation, timeout, suite.failer, suite.containerIndex))
+}
+
+//PushBeforeFarmWorkNode
+func (suite *Suite) PushBeforeFarmWorkNode(body interface{}, codeLocation types.CodeLocation, timeout time.Duration) {
+	if suite.running {
+		suite.failer.Fail("You may only call BeforeFarmWork once，top level", codeLocation)
+	}
+	//suite.topLevelContainer.PushSetupNode(leafnodes.NewBeforeFarmWork(body, codeLocation, timeout, suite.failer, suite.containerIndex))
+	suite.beforeFarmWorkNode = leafnodes.NewBeforeFarmWorkNode(body, codeLocation, timeout, suite.failer)
+
+}
+
+//PushAfterFarmWorkNode
+func (suite *Suite) PushAfterFarmWorkNode(body interface{}, codeLocation types.CodeLocation, timeout time.Duration) {
+	if suite.running {
+		suite.failer.Fail("You may only call AfterFarmWork once，top level , After all test sets are executed", codeLocation)
+	}
+	//suite.topLevelContainer.PushSetupNode(leafnodes.NewAfterFarmWork(body, codeLocation, timeout, suite.failer, suite.containerIndex))
+	suite.afterFarmWorkNode = leafnodes.NewAfterFarmWorkNode(body, codeLocation, timeout, suite.failer)
+
 }
