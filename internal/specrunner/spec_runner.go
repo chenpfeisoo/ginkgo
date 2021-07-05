@@ -63,6 +63,9 @@ func (runner *SpecRunner) Run() bool {
 	signalRegistered := make(chan struct{})
 	go runner.registerForInterrupts(signalRegistered)
 	<-signalRegistered
+	if runner.suiteWillBeginSummary().NumberOfSpecsThatWillBeRun==0{
+		return true
+	}
 	suitePassed := runner.runBeforeFarmWork()
 	if suitePassed {
 		suitePassed = runner.runBeforeSuite()
